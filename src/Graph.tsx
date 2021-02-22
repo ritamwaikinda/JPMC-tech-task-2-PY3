@@ -14,7 +14,9 @@ interface IProps {
  * Perspective library adds load to HTMLElement prototype.
  * This interface acts as a wrapper for Typescript compiler.
  */
-interface PerspectiveViewerElement {
+// Extending the HTMLElement class from the PerspectiveViewElement,
+// so that the PerspectiveViewElement can behave like an HTMLElement.
+interface PerspectiveViewerElement extends HTMLElement {
   load: (table: Table) => void,
 }
 
@@ -32,8 +34,10 @@ class Graph extends Component<IProps, {}> {
 
   componentDidMount() {
     // Get element to attach the table from the DOM.
-    const elem: PerspectiveViewerElement = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
-
+    // updated definition of elem straight to the result 
+    // of document.getElementsByTagName, since HTMLElement
+    // is now already extended to PerspectiveViewerElement.
+    const elem = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
     const schema = {
       stock: 'string',
       top_ask_price: 'float',
@@ -47,7 +51,20 @@ class Graph extends Component<IProps, {}> {
     if (this.table) {
       // Load the `table` in the `<perspective-viewer>` DOM reference.
 
-      // Add more Perspective configurations here.
+      // Added more Perspective configurations here.
+      // assigned view with a y_line value so the graph will
+      //render as a continuous line.
+      elem.setAttribute('view', 'y_line');
+      //assigned column-pivots with stock value so we can distinguish
+      // stock ABC with DEF.
+      elem.setAttribute('column-pivots', '["stock"]');
+      //assigned row-pivots the timestamp value so we can map each 
+      //datapoint along the x-axis based on the timestamp it has.
+      elem.setAttribute('row-pivots', '["timestamp"]');
+      //set column to only focus on top_ask_price data of stock.
+      elem.setAttribute('columns', '["top_ask_price"]');
+      // set aggregates to consolidate duplicate data into one data point.
+      elem.setAttribute('aggregates', `{"stock":"distinct count", "top_ask_price":"avg", "top_bid_price":"avg", "timestamp":"distinct count"}`);
       elem.load(this.table);
     }
   }
